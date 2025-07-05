@@ -17,7 +17,6 @@ class UserSerializer(serializers.ModelSerializer):
             "date_of_birth",
             "address",
             "role",
-            "emergency_contact",
             "is_active",
         ]
         extra_kwargs = {
@@ -69,7 +68,6 @@ class BaseRegistrationSerializer(serializers.ModelSerializer):
             "gender",
             "date_of_birth",
             "address",
-            "emergency_contact",
         )
         extra_kwargs = {
             "first_name": {"required": True},

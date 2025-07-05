@@ -76,8 +76,32 @@ class User(AbstractUser):
             models.Index(fields=["email", "role"]),
         ]
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"{self.get_full_name()} <{self.email}>"
+
+    @property
+    def is_patient(self) -> bool:
+        return self.role == self.Role.PATIENT
+
+    @property
+    def is_doctor(self) -> bool:
+        return self.role == self.Role.DOCTOR
+
+    @is_doctor.setter
+    def is_doctor(self, value: bool) -> None:
+        if value:
+            self.role = self.Role.DOCTOR
+        else:
+            if self.role == self.Role.DOCTOR:
+                self.role = self.Role.PATIENT
+
+    @property
+    def is_admin(self) -> bool:
+        return self.role == self.Role.ADMIN
+
+    @property
+    def can_book_appointment(self) -> bool:
+        return self.is_patient
 
 
 class PatientProfile(models.Model):
@@ -100,11 +124,10 @@ class PatientProfile(models.Model):
     weight = models.FloatField(null=True, blank=True, help_text="Weight in kg")
     medical_history = models.TextField(blank=True)
     chronic_conditions = models.TextField(blank=True)
-    emergency_contact = models.CharField(max_length=255, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"Patient: {self.user.get_full_name()}"
 
 
@@ -143,5 +166,5 @@ class DoctorProfile(models.Model):
     class Meta:
         ordering = ["-created_at"]
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"Dr. {self.user.get_full_name()} ({self.specialization})"
