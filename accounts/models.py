@@ -76,8 +76,20 @@ class User(AbstractUser):
             models.Index(fields=["email", "role"]),
         ]
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"{self.get_full_name()} <{self.email}>"
+
+    @property
+    def is_patient(self) -> bool:
+        return self.role == self.Role.PATIENT
+
+    @property
+    def is_doctor(self) -> bool:
+        return self.role == self.Role.DOCTOR
+
+    @property
+    def is_admin(self) -> bool:
+        return self.role == self.Role.ADMIN
 
 
 class PatientProfile(models.Model):
@@ -103,7 +115,7 @@ class PatientProfile(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"Patient: {self.user.get_full_name()}"
 
 
@@ -142,5 +154,5 @@ class DoctorProfile(models.Model):
     class Meta:
         ordering = ["-created_at"]
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"Dr. {self.user.get_full_name()} ({self.specialization})"
