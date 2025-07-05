@@ -100,7 +100,6 @@ class PatientProfile(models.Model):
     weight = models.FloatField(null=True, blank=True, help_text="Weight in kg")
     medical_history = models.TextField(blank=True)
     chronic_conditions = models.TextField(blank=True)
-    emergency_contact = models.CharField(max_length=255, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
