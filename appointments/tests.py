@@ -123,7 +123,6 @@ class AppointmentSerializerTests(TestCase):
             duration=30,
         )
 
-        # Attempt to create *another* appointment that overlaps (same time)
         data = {
             "doctor": self.doctor_user.id,
             "scheduled_time": timezone.now() + timedelta(days=2),

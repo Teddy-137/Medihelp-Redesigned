@@ -87,9 +87,21 @@ class User(AbstractUser):
     def is_doctor(self) -> bool:
         return self.role == self.Role.DOCTOR
 
+    @is_doctor.setter
+    def is_doctor(self, value: bool) -> None:
+        if value:
+            self.role = self.Role.DOCTOR
+        else:
+            if self.role == self.Role.DOCTOR:
+                self.role = self.Role.PATIENT
+
     @property
     def is_admin(self) -> bool:
         return self.role == self.Role.ADMIN
+
+    @property
+    def can_book_appointment(self) -> bool:
+        return self.is_patient
 
 
 class PatientProfile(models.Model):
