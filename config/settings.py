@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     # apps
     "accounts",
     "appointments",
+    "video-room",
     # dependencies
     "rest_framework",
     "rest_framework_simplejwt",

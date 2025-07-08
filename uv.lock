@@ -975,6 +975,7 @@ dependencies = [
     { name = "pillow" },
     { name = "python-dotenv" },
     { name = "radis" },
+    { name = "requests" },
 ]
 
 [package.metadata]
@@ -989,6 +990,7 @@ requires-dist = [
     { name = "pillow", specifier = ">=11.3.0" },
     { name = "python-dotenv", specifier = ">=1.1.1" },
     { name = "radis", specifier = ">=0.16.2" },
+    { name = "requests", specifier = ">=2.32.4" },
 ]
 
 [[package]]
