@@ -1,5 +1,7 @@
 from django.db import models
 from accounts.models import User
+from django.utils import timezone
+from datetime import timedelta
 
 
 class Appointment(models.Model):
@@ -16,7 +18,7 @@ class Appointment(models.Model):
         User, on_delete=models.CASCADE, related_name="doctor_appointments"
     )
     scheduled_time = models.DateTimeField()
-    duration = models.PositiveIntegerField(default=30)
+    duration = models.PositiveIntegerField(default=30, help_text="Duration in minutes")
     status = models.CharField(
         max_length=20,
         choices=AppointmentStatus.choices,
@@ -33,8 +35,15 @@ class Appointment(models.Model):
             models.Index(fields=["status"]),
         ]
 
+    @property
+    def end_time(self):
+        return self.scheduled_time + timedelta(minutes=self.duration)
+
     def __str__(self) -> str:
-        return f"Appointment #{self.id}: {self.patient} with {self.doctor} at {self.scheduled_time}"
+        return (
+            f"Appointment #{self.id}: {self.patient.get_full_name()} "
+            f"with {self.doctor.get_full_name()} at {self.scheduled_time}"
+        )
 
 
 class SessionRecord(models.Model):
@@ -48,8 +57,12 @@ class SessionRecord(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     def save(self, *args, **kwargs):
-        if not self.pk and SessionRecord.objects.filter(appointment=self.appointment).exists():
+        if (
+            not self.pk
+            and SessionRecord.objects.filter(appointment=self.appointment).exists()
+        ):
             from django.core.exceptions import ValidationError
+
             raise ValidationError("Session record already exists for this appointment")
         super().save(*args, **kwargs)
 

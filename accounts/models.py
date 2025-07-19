@@ -119,11 +119,11 @@ class PatientProfile(models.Model):
         User, on_delete=models.CASCADE, related_name="patient_profile"
     )
     blood_type = models.CharField(max_length=20, choices=BloodType.choices, blank=True)
-    allergies = models.TextField(blank=True)
+    allergies = models.TextField(null=True, blank=True)
     height = models.FloatField(null=True, blank=True, help_text="Height in cm")
     weight = models.FloatField(null=True, blank=True, help_text="Weight in kg")
-    medical_history = models.TextField(blank=True)
-    chronic_conditions = models.TextField(blank=True)
+    medical_history = models.TextField(null=True, blank=True)
+    chronic_conditions = models.TextField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -145,6 +145,7 @@ class DoctorProfile(models.Model):
         choices=VerificationStatus.choices,
         default=VerificationStatus.PENDING,
     )
+    description = models.TextField(null=True, blank=True)
     license_number = models.CharField(max_length=50, unique=True)
     specialization = models.CharField(max_length=255)
     license_document = models.FileField(

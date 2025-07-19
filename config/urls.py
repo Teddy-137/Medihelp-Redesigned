@@ -51,4 +51,5 @@ urlpatterns = [
     path("api/", include(schema_urlpatterns)),
     path("api/auth/", include(jwt_urlpatterns)),
     path("api/auth/", include("accounts.urls")),
+    path("api/appointments/", include("appointments.urls")),
 ]

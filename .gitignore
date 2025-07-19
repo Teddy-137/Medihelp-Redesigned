@@ -21,7 +21,5 @@ migrations/
 # Media files
 media/
 
-# API documentation
-api.http
 
 .vscode 

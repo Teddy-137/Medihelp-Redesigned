@@ -17,6 +17,11 @@ class AppointmentCreateView(generics.CreateAPIView):
     serializer_class = AppointmentSerializer
     permission_classes = [permissions.IsAuthenticated]
 
+    def get_serializer_context(self):
+        return {
+            "request": self.request,
+        }
+
     def perform_create(self, serializer):
         serializer.save(patient=self.request.user)
 
@@ -29,75 +34,73 @@ class UpcomingAppointmentsView(generics.ListAPIView):
         user = self.request.user
         now = timezone.now()
 
+        base_queryset = Appointment.objects.filter(
+            scheduled_time__gte=now, status=Appointment.AppointmentStatus.SCHEDULED
+        )
+
         if user.is_patient:
-            return Appointment.objects.filter(
-                patient=user, scheduled_time__gte=now, status="scheduled"
-            ).order_by("scheduled_time")
+            return base_queryset.filter(patient=user).order_by("scheduled_time")
 
         elif user.is_doctor:
-            return Appointment.objects.filter(
-                doctor=user, scheduled_time__gte=now, status="scheduled"
-            ).order_by("scheduled_time")
+            return base_queryset.filter(doctor=user).order_by("scheduled_time")
 
         # Admins see all appointments
-        return Appointment.objects.filter(
-            scheduled_time__gte=now, status="scheduled"
-        ).order_by("scheduled_time")
+        return base_queryset
 
 
 class AppointmentCancelView(generics.UpdateAPIView):
+    serializer_class = AppointmentSerializer
     queryset = Appointment.objects.all()
     permission_classes = [permissions.IsAuthenticated]
 
-    def get_serializer_class(self):
-        return AppointmentCancelSerializer
-
     def get_object(self):
-        appointment = get_object_or_404(Appointment, id=self.kwargs["pk"])
+        appointment = super().get_object()
+        user = self.request.user
 
-        if not (
-            self.request.user.is_patient == appointment.patient
-            or self.request.user.is_doctor == appointment.doctor
-            or self.request.user.is_admin
-        ):
+        if not (user == appointment.patient or user == appointment.doctor):
             raise PermissionDenied("You are not authorized to cancel this appointment")
+
+        if appointment.status != Appointment.AppointmentStatus.SCHEDULED:
+            raise PermissionDenied("You can only cancel scheduled appointments")
 
         return appointment
 
     def update(self, request, *args, **kwargs):
         appointment = self.get_object()
-        serializer = self.get_serializer(appointment, data=request.data)
-        serializer.is_valid(raise_exception=True)
-        appointment.status = "cancelled"
-        if serializer.validated_data.get("reason"):
-            appointment.reason = serializer.validated_data.get("reason")
+        cancel_serializer = AppointmentCancelSerializer(appointment, data=request.data)
+        cancel_serializer.is_valid(raise_exception=True)
+
+        reason = cancel_serializer.validated_data.get("reason", "Cancelled by user.")
+
+        appointment.status = Appointment.AppointmentStatus.CANCELLED
+        appointment.reason = reason
         appointment.save()
-        return Response(
-            {
-                "message": "Appointment cancelled successfully",
-            },
-            status=status.HTTP_200_OK,
-        )
+
+        response_serializer = self.get_serializer(appointment)
+
+        return Response(response_serializer.data, status=status.HTTP_200_OK)
 
 
 class SessionRecordCreateView(generics.CreateAPIView):
     serializer_class = SessionRecordSerializer
     permission_classes = [permissions.IsAuthenticated]
-    
+
     def perform_create(self, serializer):
-        appointment = get_object_or_404(
-            Appointment, 
-            pk=self.kwargs['appointment_id']
-        )
-        
+        appointment = get_object_or_404(Appointment, pk=self.kwargs["appointment_id"])
+
+        # This permission check is correct
         if self.request.user != appointment.doctor:
             raise PermissionDenied(
-                "Only the assigned doctor can create session records"
+                "Only the assigned doctor can create session records."
             )
-        
+
+        # This check for existing record is also correct and can be kept
         if hasattr(appointment, "session_record"):
+            raise ValidationError("Session record already exists for this appointment.")
+
+        if appointment.status != Appointment.AppointmentStatus.SCHEDULED:
             raise ValidationError(
-                "Session record already exists for this appointment"
+                "Cannot create a session for an appointment that is not scheduled."
             )
-        
+
         serializer.save(appointment=appointment, start_time=timezone.now())

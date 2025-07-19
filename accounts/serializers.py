@@ -82,6 +82,16 @@ class BaseRegistrationSerializer(serializers.ModelSerializer):
             )
         return attrs
 
+    def validate_email(self, value):
+        if User.objects.filter(email=value).exists():
+            raise serializers.ValidationError("Email already exists.")
+        return value
+
+    def validate_phone(self, value):
+        if User.objects.filter(phone=value).exists():
+            raise serializers.ValidationError("Phone number already exists.")
+        return value
+
 
 class PatientRegistrationSerializer(BaseRegistrationSerializer):
     def create(self, validated_data):
@@ -101,19 +111,29 @@ class DoctorRegistrationSerializer(BaseRegistrationSerializer):
         write_only=True, max_digits=8, decimal_places=2, required=True
     )
     availability = serializers.JSONField(write_only=True, required=True)
+    description = serializers.CharField(
+        write_only=True, required=False, allow_blank=True
+    )
 
     class Meta(BaseRegistrationSerializer.Meta):
         fields = BaseRegistrationSerializer.Meta.fields + (
             "license_number",
             "specialization",
+            "description",
             "consultation_fee",
             "availability",
         )
+
+    def validate_license_number(self, value):
+        if DoctorProfile.objects.filter(license_number=value).exists():
+            raise serializers.ValidationError("License number already exists.")
+        return value
 
     def create(self, validated_data):
         doctor_data = {
             "license_number": validated_data.pop("license_number"),
             "specialization": validated_data.pop("specialization"),
+            "description": validated_data.pop("description", ""),
             "consultation_fee": validated_data.pop("consultation_fee"),
             "availability": validated_data.pop("availability"),
         }
@@ -126,18 +146,18 @@ class DoctorRegistrationSerializer(BaseRegistrationSerializer):
         return user
 
 
-
 class DoctorPublicSerializer(serializers.ModelSerializer):
-    first_name = serializers.CharField(source='user.first_name', read_only=True)
-    last_name  = serializers.CharField(source='user.last_name',  read_only=True)
+    first_name = serializers.CharField(source="user.first_name", read_only=True)
+    last_name = serializers.CharField(source="user.last_name", read_only=True)
     profile_photo = serializers.ImageField(read_only=True)
 
     class Meta:
         model = DoctorProfile
         fields = [
-            'first_name',
-            'last_name',
-            'specialization',
-            'consultation_fee',
-            'profile_photo',
+            "first_name",
+            "last_name",
+            "specialization",
+            "description",
+            "consultation_fee",
+            "profile_photo",
         ]
