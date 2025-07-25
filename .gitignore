@@ -1,27 +1,31 @@
-# Python-generated files
+# Python bytecode files and cache
 __pycache__/
 *.py[oc]
+
+# Build and distribution folders
 build/
 dist/
 wheels/
 *.egg-info
 
-# Environment variables
+# Environment variable files 
 .env
 .env.local
 .env.*.local
 
 # Virtual environments
-.venv
+venv/
+.venv/
 
-
-# Django migrations
+# Django stuff
 migrations/
-*.sqlite3   
-# Media files
+*.sqlite3
+
+# Media files (uploaded by users)
 media/
 
-# API documentation
+# API documentation request files
 api.http
 
-.vscode 
+# VSCode settings folder
+.vscode/

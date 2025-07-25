@@ -31,16 +31,20 @@ class UserManager(BaseUserManager):
         return user
 
     def create_superuser(
-        self, email, first_name, last_name, phone, password=None, **extra_fields
-    ):
+            self, email, first_name, last_name, phone, password=None, **extra_fields
+):
         extra_fields.setdefault("is_staff", True)
         extra_fields.setdefault("is_superuser", True)
         extra_fields.setdefault("is_active", True)
         extra_fields.setdefault("role", User.Role.ADMIN)
-
+        if extra_fields.get("is_staff") is not True:
+            raise ValueError("Superuser must have is_staff=True.")
+        if extra_fields.get("is_superuser") is not True:
+            raise ValueError("Superuser must have is_superuser=True.")
         return self.create_user(
-            email, first_name, last_name, phone, password, **extra_fields
-        )
+        email, first_name, last_name, phone, password, **extra_fields
+    )
+
 
 
 class User(AbstractUser):
@@ -66,7 +70,7 @@ class User(AbstractUser):
     updated_at = models.DateTimeField(auto_now=True)
 
     USERNAME_FIELD = "email"
-    REQUIRED_FIELDS = ["first_name", "last_name", "phone"]
+    REQUIRED_FIELDS = ["first_name", "last_name", "phone"] 
 
     objects = UserManager()
 
@@ -97,7 +101,7 @@ class User(AbstractUser):
 
     @property
     def is_admin(self) -> bool:
-        return self.role == self.Role.ADMIN
+        return self.role == self.Role.ADMIN or self.is_superuser # This checks if the user is
 
     @property
     def can_book_appointment(self) -> bool:
@@ -145,6 +149,7 @@ class DoctorProfile(models.Model):
         choices=VerificationStatus.choices,
         default=VerificationStatus.PENDING,
     )
+    description = models.TextField(null=True, blank=True)
     license_number = models.CharField(max_length=50, unique=True)
     specialization = models.CharField(max_length=255)
     license_document = models.FileField(

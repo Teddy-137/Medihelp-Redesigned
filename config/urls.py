@@ -1,5 +1,4 @@
-"""
-URL configuration for config project.
+"""URL configuration for config project.
 
 The `urlpatterns` list routes URLs to views. For more information please see:
     https://docs.djangoproject.com/en/5.2/topics/http/urls/
@@ -21,8 +20,8 @@ from rest_framework_simplejwt.views import (
     TokenRefreshView,
 )
 from drf_spectacular.views import (
-    SpectacularAPIView, 
-    SpectacularRedocView, 
+    SpectacularAPIView,
+    SpectacularRedocView,
     SpectacularSwaggerView
 )
 
@@ -41,6 +40,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include(schema_urlpatterns)),
     path('api/auth/', include(jwt_urlpatterns)),
-
     path('api/auth/', include('accounts.urls')),
+    # ADD THIS LINE to include your appointments app's URLs
+    path('api/appointments/', include(('appointments.urls', 'appointments'), namespace='appointments')),
 ]
